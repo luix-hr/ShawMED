@@ -249,8 +249,8 @@ int main()
     boasVindas();
 
     int choice;
+    int login;
 
-    printf("Bem-vindo ao ShawMED!\n\n");
     printf("Escolha o tipo de usuário:\n");
     printf("1. Admin\n");
     printf("2. Médico\n");
@@ -262,9 +262,10 @@ int main()
     {
     case 1:
         loginAdmin();
-        if (loginAdmin != 0)
+        login = loginAdmin();
+        if (login != 0)
         {
-            printf("Tela ADMIN");
+            printf("\nTela ADMIN");
         }else{
             loginAdmin();
         }
