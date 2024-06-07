@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <locale.h>
 #include <stdbool.h>
 
 #define MAX_USERS 100
@@ -21,6 +20,7 @@ typedef struct
 User users[MAX_USERS];
 int numUsers = 0;
 
+#define MAX_PACIENTES 100
 #define MAX_NAME_LENGTH 100
 #define MAX_PHONE_LENGTH 15
 #define MAX_STATUS_LENGTH 20
@@ -39,7 +39,10 @@ typedef struct
 
 } Paciente;
 
-void loadUsers()
+Paciente paciente[MAX_PACIENTES];
+int numPacientes = 0;
+
+void carregarUsers()
 {
     FILE *file = fopen("users.txt", "r");
     if (file != NULL)
@@ -52,7 +55,7 @@ void loadUsers()
     }
 }
 
-void saveUsers()
+void salvarUsers()
 {
     FILE *file = fopen("users.txt", "w");
     if (file == NULL)
@@ -67,7 +70,7 @@ void saveUsers()
     fclose(file);
 }
 
-int isUserRegistered(char *type, char *username, char *password)
+int verificarUser(char *type, char *username, char *password)
 {
     for (int i = 0; i < numUsers; i++)
     {
@@ -79,7 +82,7 @@ int isUserRegistered(char *type, char *username, char *password)
     return 0; // Usuário não encontrado
 }
 
-int isCPFRegistered(char *cpf)
+int verificarCPFUsers(char *cpf)
 {
     for (int i = 0; i < numUsers; i++)
     {
@@ -117,7 +120,7 @@ int loginAdmin()
     printf("Password: ");
     scanf("%s", password);
 
-    if (isUserRegistered(type, username, password))
+    if (verificarUser(type, username, password))
     {
         printf("Login bem-sucedido como Admin");
         return 1;
@@ -144,7 +147,7 @@ int loginMedico()
     printf("Password: ");
     scanf("%s", password);
 
-    if (isUserRegistered(type, username, password))
+    if (verificarUser(type, username, password))
     {
         printf("Login bem-sucedido como Medico");
         return 1;
@@ -173,7 +176,7 @@ int loginAtendente()
     printf("Password: ");
     scanf("%s", password);
 
-    if (isUserRegistered(type, username, password))
+    if (verificarUser(type, username, password))
     {
         printf("Login bem-sucedido como Atendente");
         return 1;
@@ -204,7 +207,7 @@ void cadastrarMedico()
     printf("Digite seu CPF: ");
     scanf("%s", cpf);
 
-    if (isCPFRegistered(cpf))
+    if (verificarCPFUsers(cpf))
     {
         printf("CPF já cadastrado!\n");
         return;
@@ -216,7 +219,7 @@ void cadastrarMedico()
     strcpy(users[numUsers].cpf, cpf);
     numUsers++;
 
-    saveUsers();
+    salvarUsers();
 
     printf("Cadastro realizado com sucesso!\n");
 }
@@ -238,7 +241,7 @@ void cadastrarAtendente()
     printf("Digite seu CPF: ");
     scanf("%s", cpf);
 
-    if (isCPFRegistered(cpf))
+    if (verificarCPFUsers(cpf))
     {
         printf("CPF já cadastrado!\n");
         return;
@@ -250,7 +253,7 @@ void cadastrarAtendente()
     strcpy(users[numUsers].cpf, cpf);
     numUsers++;
 
-    saveUsers();
+    salvarUsers();
 
     printf("Cadastro realizado com sucesso!\n");
 }
@@ -272,7 +275,7 @@ void cadastrarAdmin()
     printf("Digite seu CPF: ");
     scanf("%s", cpf);
 
-    if (isCPFRegistered(cpf))
+    if (verificarCPFUsers(cpf))
     {
         printf("CPF já cadastrado!\n");
         return;
@@ -284,7 +287,7 @@ void cadastrarAdmin()
     strcpy(users[numUsers].cpf, cpf);
     numUsers++;
 
-    saveUsers();
+    salvarUsers();
 
     printf("Cadastro realizado com sucesso!\n");
 }
@@ -298,7 +301,7 @@ void cadastrarPaciente()
         return;
     }
 
-    char choice;
+    char escolha;
     do
     {
         Paciente paciente;
@@ -328,8 +331,8 @@ void cadastrarPaciente()
         scanf("%f", &paciente.altura);
 
         printf("Possui plano de saúde? (s/n): ");
-        scanf(" %c", &choice);
-        paciente.haveHealthPlan = (choice == 's' || choice == 'S');
+        scanf(" %c", &escolha);
+        paciente.haveHealthPlan = (escolha == 's' || escolha == 'S');
 
         fprintf(file, "%s,%s,%d,%c,%s,%s,%.2f,%.2f,%s\n",
                 paciente.nomeCompleto,
@@ -343,24 +346,208 @@ void cadastrarPaciente()
                 paciente.haveHealthPlan ? "Sim" : "Não");
 
         printf("Paciente cadastrado com sucesso!\n");
+        numPacientes++;
 
         printf("Deseja cadastrar outro paciente? (s/n): ");
-        scanf(" %c", &choice);
-        getchar(); // Limpar o buffer de entrada
+        scanf(" %c", &escolha);
+        getchar();
 
-    } while (choice == 's' || choice == 'S');
+    } while (escolha == 's' || escolha == 'S');
 
     fclose(file);
+}
+
+int verificarCPFPacientes(Paciente *paciente, int numPacientes, char *cpf)
+{
+    for (int i = 0; i < numPacientes; i++)
+    {
+        if (strcmp(paciente[i].cpf, cpf) == 0)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void listarDadosPaciente()
+{
+    FILE *file = fopen("pacientes.txt", "r");
+    if (file == NULL)
+    {
+        printf("Erro ao abrir o arquivo.\n");
+        return;
+    }
+
+    Paciente paciente;
+
+    char cpf[MAX_CPF_LENGTH];
+    printf("Digite o CPF do paciente que deseja verificar: ");
+    scanf("%s", cpf);
+
+    int encontrado = 0;
+
+    while (fscanf(file, "%[^,],%[^,],%d,%c,%[^,],%[^,],%lf,%lf,%d\n",
+                  paciente.nomeCompleto,
+                  paciente.cpf,
+                  &paciente.idade,
+                  &paciente.genero,
+                  paciente.telefone,
+                  paciente.estadoCivil,
+                  &paciente.peso,
+                  &paciente.altura,
+                  &paciente.haveHealthPlan) == 9)
+    {
+        if (strcmp(cpf, paciente.cpf) == 0)
+        {
+            encontrado = 1;
+            printf("\n--- Dados do Paciente ---\n");
+            printf("Nome Completo: %s\n", paciente.nomeCompleto);
+            printf("CPF: %s\n", paciente.cpf);
+            printf("Idade: %d\n", paciente.idade);
+            printf("Gênero: %c\n", paciente.genero);
+            printf("Telefone: %s\n", paciente.telefone);
+            printf("Estado Civil: %s\n", paciente.estadoCivil);
+            printf("Peso: %.2f kg\n", paciente.peso);
+            printf("Altura: %.2f cm\n", paciente.altura);
+            printf("Possui plano de saúde? %s\n", paciente.haveHealthPlan ? "Sim" : "Não");
+            break;
+        }
+    }
+
+    if (!encontrado)
+    {
+        printf("Paciente não encontrado.\n");
+    }
+
+    fclose(file);
+
+    char escolha;
+    printf("Deseja pesquisar outro paciente? (s/n): ");
+    scanf(" %c", &escolha);
+
+    if (escolha == 's' || escolha == 'S')
+    {
+        listarDadosPaciente();
+    }
+}
+
+void agendarConsultaPaciente()
+{
+    FILE *filePacientes = fopen("pacientes.txt", "r");
+    if (filePacientes == NULL)
+    {
+        printf("Erro ao abrir o arquivo de pacientes.\n");
+        return;
+    }
+
+    FILE *fileMedicos = fopen("medicos.txt", "r");
+    if (fileMedicos == NULL)
+    {
+        printf("Erro ao abrir o arquivo de médicos.\n");
+        fclose(filePacientes);
+        return;
+    }
+
+    char cpf[MAX_CPF_LENGTH];
+    printf("Digite o CPF do paciente para agendar a consulta: ");
+    scanf("%s", cpf);
+
+    int encontradoPaciente = 0;
+    Paciente paciente;
+
+    while (fscanf(filePacientes, "%[^,],%[^,],%d,%c,%[^,],%[^,],%lf,%lf,%d\n",
+                  paciente.nomeCompleto,
+                  paciente.cpf,
+                  &paciente.idade,
+                  &paciente.genero,
+                  paciente.telefone,
+                  paciente.estadoCivil,
+                  &paciente.peso,
+                  &paciente.altura,
+                  &paciente.haveHealthPlan) == 9)
+    {
+        if (strcmp(cpf, paciente.cpf) == 0)
+        {
+            encontradoPaciente = 1;
+            printf("\n--- Dados do Paciente ---\n");
+            printf("Nome Completo: %s\n", paciente.nomeCompleto);
+            printf("CPF: %s\n", paciente.cpf);
+            printf("Idade: %d\n", paciente.idade);
+            printf("Gênero: %c\n", paciente.genero);
+            printf("Telefone: %s\n", paciente.telefone);
+            printf("Estado Civil: %s\n", paciente.estadoCivil);
+            printf("Peso: %.2f kg\n", paciente.peso);
+            printf("Altura: %.2f cm\n", paciente.altura);
+            printf("Possui plano de saúde? %s\n", paciente.haveHealthPlan ? "Sim" : "Não");
+            break;
+        }
+    }
+
+    fclose(filePacientes);
+
+    if (!encontradoPaciente)
+    {
+        printf("Paciente não encontrado.\n");
+        fclose(fileMedicos);
+        return;
+    }
+
+    char nomeMedico[MAX_NAME_LENGTH];
+    char especialidade[MAX_NAME_LENGTH];
+    char dataConsulta[MAX_NAME_LENGTH];
+
+    int encontradoMedico = 0;
+
+    printf("\n--- Escolha o Médico e informe a data da consulta ---\n");
+
+    while (fscanf(fileMedicos, "%s %s", nomeMedico, especialidade) == 2)
+    {
+        printf("Nome do Médico: %s\n", nomeMedico);
+        printf("Especialidade: %s\n", especialidade);
+        printf("Data da Consulta (DD/MM/AAAA): ");
+        scanf("%s", dataConsulta);
+
+        encontradoMedico = 1;
+
+        FILE *fileAgendamentos = fopen("agendamentos.txt", "a");
+        if (fileAgendamentos == NULL)
+        {
+            printf("Erro ao abrir o arquivo de agendamentos.\n");
+            fclose(fileMedicos);
+            return;
+        }
+
+        fprintf(fileAgendamentos, "%s;%s;%s\n", paciente.nomeCompleto, nomeMedico, dataConsulta);
+
+        fclose(fileAgendamentos);
+
+        printf("Consulta agendada com sucesso!\n");
+        printf("--------------------------------------\n");
+        printf("Deseja agendar outra consulta? (s/n): ");
+        char escolha;
+        scanf(" %c", &escolha);
+        if (escolha == 'n' || escolha == 'N')
+        {
+            break;
+        }
+    }
+
+    fclose(fileMedicos);
+
+    if (!encontradoMedico)
+    {
+        printf("Nenhum médico cadastrado.\n");
+        return;
+    }
 }
 
 int main()
 {
 
-    setlocale(LC_ALL, "Portuguese");
-    loadUsers();
+    carregarUsers();
     boasVindas();
 
-    int choice;
+    int escolha;
 
     do
     {
@@ -372,19 +559,20 @@ int main()
         printf("3. Atendente\n");
         printf("4. Sair\n");
         printf("Opção: ");
-        scanf("%d", &choice);
+        scanf("%d", &escolha);
 
-        switch (choice)
+        switch (escolha)
         {
         case 1:
             login = loginAdmin();
             if (login != 0)
             {
                 printf("\n--- TELA ADMIN ---\n");
-                cadastrarMedico();
+                cadastrarAtendente();
             }
-            else{
-                choice = 1;
+            else
+            {
+                escolha = 1;
             }
             break;
         case 2:
@@ -393,8 +581,9 @@ int main()
             {
                 printf("\n--- TELA MEDICO ---\n");
             }
-            else{
-                choice = 1;
+            else
+            {
+                escolha = 1;
             }
             break;
 
@@ -403,9 +592,12 @@ int main()
             if (login != 0)
             {
                 printf("\n--- TELA ATENDENTE ---\n");
+                agendarConsultaPaciente();
+                listarDadosPaciente();
             }
-            else{
-                choice = 1;
+            else
+            {
+                escolha = 1;
             }
             break;
 
@@ -416,5 +608,5 @@ int main()
         default:
             printf("Opção inválida!\n");
         }
-    } while (choice != 4);
+    } while (escolha != 4);
 }
