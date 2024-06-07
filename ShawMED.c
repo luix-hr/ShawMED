@@ -40,7 +40,7 @@ typedef struct
 } Paciente;
 
 Paciente paciente[MAX_PACIENTES];
-int numPacientes = 0;
+int numPacientes;
 
 void carregarUsers()
 {
@@ -369,6 +369,29 @@ int verificarCPFPacientes(Paciente *paciente, int numPacientes, char *cpf)
     return 0;
 }
 
+void carregarPacientes()
+{
+    FILE *file = fopen("pacientes.txt", "r");
+    if (file != NULL)
+    {
+        while (fscanf(file, "%s,%s,%d,%c,%s,%s,%f,%f,%s\n",
+                      paciente[numPacientes].nomeCompleto,
+                      paciente[numPacientes].cpf,
+                      &paciente[numPacientes].idade,
+                      &paciente[numPacientes].genero,
+                      paciente[numPacientes].telefone,
+                      paciente[numPacientes].estadoCivil,
+                      &paciente[numPacientes].peso,
+                      &paciente[numPacientes].altura,
+                      paciente[numPacientes].haveHealthPlan) == 9)
+        {
+            numPacientes++;
+        }
+        fclose(file);
+        printf("\n O valor é: %d", numPacientes);
+    }
+}
+
 void listarDadosPaciente()
 {
     FILE *file = fopen("pacientes.txt", "r");
@@ -385,18 +408,22 @@ void listarDadosPaciente()
     scanf("%s", cpf);
 
     int encontrado = 0;
+    int i;
 
-    while (fscanf(file, "%[^,],%[^,],%d,%c,%[^,],%[^,],%lf,%lf,%d\n",
-                  paciente.nomeCompleto,
-                  paciente.cpf,
-                  &paciente.idade,
-                  &paciente.genero,
-                  paciente.telefone,
-                  paciente.estadoCivil,
-                  &paciente.peso,
-                  &paciente.altura,
-                  &paciente.haveHealthPlan) == 9)
+    for (i = 0; i < numPacientes; i++)
     {
+
+        fscanf(file, "%[^,],%[^,],%d,%c,%[^,],%[^,],%lf,%lf,%d\n",
+               paciente.nomeCompleto,
+               paciente.cpf,
+               &paciente.idade,
+               &paciente.genero,
+               paciente.telefone,
+               paciente.estadoCivil,
+               &paciente.peso,
+               &paciente.altura,
+               &paciente.haveHealthPlan) == 9;
+
         if (strcmp(cpf, paciente.cpf) == 0)
         {
             encontrado = 1;
@@ -455,17 +482,22 @@ void agendarConsultaPaciente()
     int encontradoPaciente = 0;
     Paciente paciente;
 
-    while (fscanf(filePacientes, "%[^,],%[^,],%d,%c,%[^,],%[^,],%lf,%lf,%d\n",
-                  paciente.nomeCompleto,
-                  paciente.cpf,
-                  &paciente.idade,
-                  &paciente.genero,
-                  paciente.telefone,
-                  paciente.estadoCivil,
-                  &paciente.peso,
-                  &paciente.altura,
-                  &paciente.haveHealthPlan) == 9)
+    int i;
+
+    for (i = 0; i < numPacientes; i++)
     {
+
+        fscanf(filePacientes, "%[^,],%[^,],%d,%c,%[^,],%[^,],%lf,%lf,%d\n",
+               paciente.nomeCompleto,
+               paciente.cpf,
+               &paciente.idade,
+               &paciente.genero,
+               paciente.telefone,
+               paciente.estadoCivil,
+               &paciente.peso,
+               &paciente.altura,
+               &paciente.haveHealthPlan) == 9;
+
         if (strcmp(cpf, paciente.cpf) == 0)
         {
             encontradoPaciente = 1;
@@ -545,6 +577,7 @@ int main()
 {
 
     carregarUsers();
+    carregarPacientes();
     boasVindas();
 
     int escolha;
@@ -592,6 +625,7 @@ int main()
             if (login != 0)
             {
                 printf("\n--- TELA ATENDENTE ---\n");
+                printf("\n%d\n", numPacientes);
                 agendarConsultaPaciente();
                 listarDadosPaciente();
             }
